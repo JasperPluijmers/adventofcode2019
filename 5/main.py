@@ -11,10 +11,8 @@ class Parameter:
 
 
 def handleMult(index, command, list):
-    modes = command.zfill(2)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    list[list[index + 3]] = parameter1.getValue(list) * parameter2.getValue(list)
+    params = parameters(index, list, command.zfill(2))
+    list[list[index + 3]] = params[0] * params[1]
     readmachead(index + 4, list)
 
 
@@ -29,51 +27,47 @@ def handleOutp(index, list):
     readmachead(index + 2, list)
 
 def handleSum(index, command, list):
-    modes = command.zfill(2)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    list[list[index + 3]] = parameter1.getValue(list) + parameter2.getValue(list)
+    params = parameters(index, list, command.zfill(2))
+    list[list[index + 3]] = params[0] + params[1]
     readmachead(index + 4, list)
 
 
 def handleJumpTrue(index, command, list):
-    modes = command.zfill(2)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    if parameter1.getValue(list) != 0:
-        readmachead(parameter2.getValue(list), list)
+    params = parameters(index, list, command.zfill(2))
+    if params[0] != 0:
+        readmachead(params[1], list)
     else:
         readmachead(index + 3, list)
 
 def handleJumpFalse(index, command, list):
-    modes = command.zfill(2)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    if parameter1.getValue(list) == 0:
-        readmachead(parameter2.getValue(list), list)
+    params = parameters(index, list, command.zfill(2))
+    if params[0] == 0:
+        readmachead(params[1], list)
     else:
         readmachead(index + 3, list)
 
 def lessThan(index, command, list):
-    modes = command.zfill(3)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    if parameter1.getValue(list) < parameter2.getValue(list):
+    params = parameters(index, list, command.zfill(3))
+    if params[0] < params[1]:
         list[list[index + 3]] = 1
     else:
         list[list[index + 3]] = 0
     readmachead(index + 4, list)
 
 def equal(index, command, list):
-    modes = command.zfill(3)
-    parameter1 = Parameter(list[index + 1], int(modes[-1]))
-    parameter2 = Parameter(list[index + 2], int(modes[-2]))
-    if parameter1.getValue(list) == parameter2.getValue(list):
+    params = parameters(index, list, command.zfill(3))
+    if params[0] == params[1]:
         list[list[index + 3]] = 1
     else:
         list[list[index + 3]] = 0
     readmachead(index + 4, list)
 
+def parameters(index, list, modes):
+    parameters = []
+    for i in range(1, len(modes) + 1):
+        parameter = Parameter(list[index + i], int(modes[-i]))
+        parameters.append(parameter.getValue(list))
+    return parameters
 
 
 def readmachead(index, list):
