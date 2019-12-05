@@ -1,15 +1,3 @@
-class Parameter:
-    def __init__(self, number, mode):
-        self.number = number
-        self.mode = mode
-
-    def getValue(self, listie):
-        if self.mode == 0:
-            return listie[self.number]
-        if self.mode == 1:
-            return self.number
-
-
 def handleMult(index, command, list):
     params = parameters(index, list, command.zfill(2))
     list[list[index + 3]] = params[0] * params[1]
@@ -63,11 +51,13 @@ def equal(index, command, list):
     readmachead(index + 4, list)
 
 def parameters(index, list, modes):
-    parameters = []
+    parameterlist = []
     for i in range(1, len(modes) + 1):
-        parameter = Parameter(list[index + i], int(modes[-i]))
-        parameters.append(parameter.getValue(list))
-    return parameters
+        if int(modes[-i]) == 0:
+            parameterlist.append(list[list[index + i]])
+        elif int(modes[-i]) == 1:
+            parameterlist.append(list[index + i])
+    return parameterlist
 
 
 def readmachead(index, list):
