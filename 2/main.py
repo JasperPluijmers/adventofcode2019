@@ -13,7 +13,7 @@ def readmachead(index, list):
 with open("input.txt") as file:
     input = [int(entry) for entry in file.readline().split(",")]
 
-print("Answer for 1: ", readmachead(0, input.copy())[0])
+print("Answer for 1: ", readmachead(0, input.copy()))
 
 for i in range(100):
     for j in range(100):
