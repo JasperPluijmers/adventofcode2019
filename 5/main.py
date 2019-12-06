@@ -5,7 +5,7 @@ def handleMult(index, command, list):
 
 
 def handleInp(index, list):
-    list[list[index + 1]] = input
+    list[list[index + 1]] = inputfield
     readmachead(index + 2, list)
 
 
@@ -84,7 +84,7 @@ def readmachead(index, list):
         equal(index, modes, list)
 
 
-input = 5
+inputfield = 5
 output = 99
 
 with open("input.txt") as file:
