@@ -21,6 +21,7 @@ class opcodesolver:
         command = str(self.program[self.instructionpointer])
         opcode = int(command[-2:])
         modes = command[:-2]
+        print(opcode)
         if opcode == 99:
             self.state = State.FINISHED
             return
@@ -105,7 +106,6 @@ class opcodesolver:
         self.instructionpointer += amount
 
     def giveOutput(self, param):
-        print("giving output: ", param)
         self.outputdevice.receiveInput(param)
 
     def receiveInput(self, param):
@@ -122,7 +122,7 @@ with open("input.txt") as file:
 
 programs = []
 outputs = []
-for combination in itertools.permutations([5,6,7,8,9]):
+for combination in itertools.permutations([5, 6, 7, 8, 9]):
     for phase in combination:
         programs.append(opcodesolver(program.copy(), phase))
     programs[0].outputdevice = programs[1]
@@ -131,9 +131,9 @@ for combination in itertools.permutations([5,6,7,8,9]):
     programs[3].outputdevice = programs[4]
     programs[4].outputdevice = programs[0]
     programs[0].inputs.append(0)
-    while(programs[4].state != State.FINISHED):
+    while programs[4].state != State.FINISHED:
         for i in programs:
-            if (i.state != State.FINISHED):
+            if i.state == State.RUNNING:
                 i.readprogram()
     outputs.append(programs[0].inputs[0])
     programs = []
