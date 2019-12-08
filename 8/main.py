@@ -32,7 +32,8 @@ input = [int(c) for c in input]
 
 picture = Picture(input, 25*6)
 
+zerocount = [[layer.count(0), layer.count(1) * layer.count(2)] for layer in picture.layers]
+print(min(zerocount, key=lambda x: x[0]))
+
 visiblepixels = [next(filter(lambda x: x != 2, pixellayers), 2) for pixellayers in picture.pixellists()]
 print(np.reshape(visiblepixels, (6,25)))
-print(min([layer.count(0) for layer in picture.layers]))
-print([[layer.count(0), layer.count(1) * layer.count(2)] for layer in picture.layers])
