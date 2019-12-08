@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class Layer:
     def __init__(self, pixels):
@@ -37,3 +37,5 @@ print(min(zerocount, key=lambda x: x[0]))
 
 visiblepixels = [next(filter(lambda x: x != 2, pixellayers), 2) for pixellayers in picture.pixellists()]
 print(np.reshape(visiblepixels, (6,25)))
+plt.imshow(np.reshape(visiblepixels, (6,25)))
+plt.show()
