@@ -1,0 +1,2 @@
+* Hacked the new functions into the functions from day 2, nice that you are basically creating a programming language
+* Used ugly global variables for the in and output. Got stuck for 15 minutes figuring out that both the 'input' to the machine and the input of the puzzle were named input, which resulted in inserting a list in the program at opcode 3. <- stupid

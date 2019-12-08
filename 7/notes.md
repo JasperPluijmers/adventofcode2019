@@ -1,0 +1,3 @@
+* For the first part I hacked the new functions into the code from day 5. worked fine.
+* For the second part this was not possible anymore as there would be need for some kind of concurrency. Decided to rewrite it into a class.
+* At first I passed around all function calls within the same stack so got a stack overflow error. Decided to let the achines run concurrently on some kind of 'clock'. Think it is a nic solution that can be adapted into other forms of concurrencies

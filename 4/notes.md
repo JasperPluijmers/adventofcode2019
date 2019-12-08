@@ -1,0 +1,1 @@
+* Just brute forced the solutions, am not happy with how ugly the second part looks but was nog interested in improving it.
