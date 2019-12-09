@@ -1,10 +1,18 @@
 import itertools
 from enum import Enum
 
+
 class State(Enum):
     RUNNING = 0
     WAITING = 1
     FINISHED = 2
+
+
+class ParameterMode(Enum):
+    POSITION = 0
+    IMMEDIATE = 1
+    RELATIVE = 2
+
 
 class opcodesolver:
     instructionpointer = 0
@@ -21,100 +29,96 @@ class opcodesolver:
     def readprogram(self):
         command = str(self.program[self.instructionpointer])
         opcode = int(command[-2:])
-        modes = command[:-2]
+        modes = [ParameterMode(int(parameter)) for parameter in command[:-2].zfill(5)]
         if opcode == 99:
             self.state = State.FINISHED
             return
-        if opcode == 1:
+        elif opcode == 1:
             self.handleSum(modes)
-        if opcode == 2:
+        elif opcode == 2:
             self.handleMult(modes)
-        if opcode == 3:
+        elif opcode == 3:
             self.handleInp(modes)
-        if opcode == 4:
+        elif opcode == 4:
             self.handleOutp(modes)
-        if opcode == 5:
+        elif opcode == 5:
             self.handleJumpTrue(modes)
-        if opcode == 6:
+        elif opcode == 6:
             self.handleJumpFalse(modes)
-        if opcode == 7:
+        elif opcode == 7:
             self.lessThan(modes)
-        if opcode == 8:
+        elif opcode == 8:
             self.equal(modes)
-        if opcode == 9:
+        elif opcode == 9:
             self.adjustrelbase(modes)
-        if opcode not in [1, 2, 3, 4, 5, 6, 7, 8, 9, 99]:
-            print("error")
+        else:
+            print("error, opcode unknown")
+            exit()
 
-    def handleMult(self, command):
-        params = self.parameters(command.zfill(2)[-2:])
-        self.writetomemory(self.program[self.instructionpointer + 3], params[0] * params[1], command.zfill(3)[0] == "2")
+    def handleMult(self, modes):
+        params = self.parameters(modes, 2)
+        self.writetomemory(self.program[self.instructionpointer + 3], params[0] * params[1], modes[-3])
         self.moveinstructionpointer(4)
 
-    def handleInp(self, command):
+    def handleInp(self, modes):
         if len(self.inputs) == 0:
             self.state = State.WAITING
             return
-        self.writetomemory(self.program[self.instructionpointer + 1], self.inputs[0], command.zfill(1)[0] == "2")
+        self.writetomemory(self.program[self.instructionpointer + 1], self.inputs[0], modes[-1])
         self.inputs.pop(0)
         self.moveinstructionpointer(2)
 
     def handleOutp(self, modes):
-        modes = modes.zfill(1)
-        if (int(modes[-1])) == 0:
-            self.giveOutput(self.program[self.program[self.instructionpointer + 1]])
-        if (int(modes[-1])) == 1:
-            self.giveOutput(self.program[self.instructionpointer + 1])
-        if int(modes[-1]) == 2:
-            self.giveOutput(self.program[self.relativebase + self.program[self.instructionpointer + 1]])
+        params = (self.parameters(modes, 1))
+        self.giveOutput(params[0])
         self.moveinstructionpointer(2)
 
-    def handleSum(self, command):
-        params = self.parameters(command.zfill(2)[-2:])
-        self.writetomemory(self.program[self.instructionpointer + 3], params[0] + params[1], command.zfill(3)[0] == "2")
+    def handleSum(self, modes):
+        params = self.parameters(modes, 2)
+        self.writetomemory(self.program[self.instructionpointer + 3], params[0] + params[1], modes[-3])
         self.moveinstructionpointer(4)
 
-    def handleJumpTrue(self, command):
-        params = self.parameters(command.zfill(2))
+    def handleJumpTrue(self, modes):
+        params = self.parameters(modes, 2)
         if params[0] != 0:
             self.setinstructionpointer(params[1])
         else:
             self.moveinstructionpointer(3)
 
-    def handleJumpFalse(self, command):
-        params = self.parameters(command.zfill(2))
+    def handleJumpFalse(self, modes):
+        params = self.parameters(modes, 2)
         if params[0] == 0:
             self.setinstructionpointer(params[1])
         else:
             self.moveinstructionpointer(3)
 
-    def lessThan(self, command):
-        params = self.parameters(command.zfill(3))
+    def lessThan(self, modes):
+        params = self.parameters(modes, 2)
         if params[0] < params[1]:
-            self.writetomemory(self.program[self.instructionpointer + 3], 1, command.zfill(3)[0] == "2")
+            self.writetomemory(self.program[self.instructionpointer + 3], 1, modes[-3])
         else:
-            self.writetomemory(self.program[self.instructionpointer + 3], 0, command.zfill(3)[0] == "2")
+            self.writetomemory(self.program[self.instructionpointer + 3], 0, modes[-3])
         self.moveinstructionpointer(4)
 
-    def equal(self, command):
-        params = self.parameters(command.zfill(3))
+    def equal(self, modes):
+        params = self.parameters(modes, 2)
         if params[0] == params[1]:
-            self.writetomemory(self.program[self.instructionpointer + 3], 1, command.zfill(3)[0] == "2")
+            self.writetomemory(self.program[self.instructionpointer + 3], 1, modes[-3])
         else:
-            self.writetomemory(self.program[self.instructionpointer + 3], 0, command.zfill(3)[0] == "2")
+            self.writetomemory(self.program[self.instructionpointer + 3], 0, modes[-3])
         self.moveinstructionpointer(4)
 
-    def parameters(self, modes):
+    def parameters(self, modes, amount):
         parameterlist = []
-        for i in range(1, len(modes) + 1):
-            if int(modes[-i]) == 0:
+        for i in range(1, amount + 1):
+            if modes[-i] == ParameterMode.POSITION:
                 if len(self.program) < self.program[self.instructionpointer + i] + i:
                     parameterlist.append(0)
                 else:
                     parameterlist.append(self.program[self.program[self.instructionpointer + i]])
-            elif int(modes[-i]) == 1:
+            elif modes[-i] == ParameterMode.IMMEDIATE:
                     parameterlist.append(self.program[self.instructionpointer + i])
-            elif int(modes[-i]) == 2:
+            elif modes[-i] == ParameterMode.RELATIVE:
                 parameterlist.append(self.program[self.relativebase + self.program[self.instructionpointer + i]])
         return parameterlist
 
@@ -133,12 +137,12 @@ class opcodesolver:
         self.instructionpointer = param
 
     def adjustrelbase(self, modes):
-        params = self.parameters(modes.zfill(1))
+        params = self.parameters(modes, 1)
         self.relativebase += params[0]
         self.moveinstructionpointer(2)
 
-    def writetomemory(self, position, value, isrelative):
-        if isrelative:
+    def writetomemory(self, position, value, mode):
+        if mode == ParameterMode.RELATIVE:
             position = position + self.relativebase
         if len(self.program) <= position:
             n = position - len(self.program) + 1
@@ -155,7 +159,7 @@ with open("input.txt") as file:
 programs = []
 outputs = []
 
-programrunner = opcodesolver(program,2)
+programrunner = opcodesolver(program, 1)
 programrunner.outputdevice = Outputprinter()
 while programrunner.state != State.FINISHED:
     programrunner.readprogram()
