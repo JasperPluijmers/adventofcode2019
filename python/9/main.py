@@ -1,5 +1,7 @@
 import itertools
 from enum import Enum
+from typing import List
+from abc import abstractmethod, ABC
 
 
 class State(Enum):
@@ -14,15 +16,23 @@ class ParameterMode(Enum):
     RELATIVE = 2
 
 
-class opcodesolver:
-    instructionpointer = 0
-    relativebase = 0
-    state = State.WAITING
-    outputdevice = None
+class OutputDevice(ABC):
 
-    def __init__(self, program, phase):
+    @abstractmethod
+    def receiveinput(self, param: int):
+        pass
+
+
+class OpcodeSolver(OutputDevice):
+    instructionpointer: int = 0
+    relativebase: int = 0
+    state: State = State.WAITING
+    outputdevice: OutputDevice = None
+    program: List[int]
+    inputs: List[int] = []
+
+    def __init__(self, program: list, phase: int):
         self.program = program
-        self.inputs = []
         self.inputs.append(phase)
         self.state = State.RUNNING
 
@@ -55,12 +65,12 @@ class opcodesolver:
             print("error, opcode unknown")
             exit()
 
-    def handleMult(self, modes):
+    def handleMult(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         self.writetomemory(self.program[self.instructionpointer + 3], params[0] * params[1], modes[-3])
         self.moveinstructionpointer(4)
 
-    def handleInp(self, modes):
+    def handleInp(self, modes: List[ParameterMode]):
         if len(self.inputs) == 0:
             self.state = State.WAITING
             return
@@ -68,31 +78,31 @@ class opcodesolver:
         self.inputs.pop(0)
         self.moveinstructionpointer(2)
 
-    def handleOutp(self, modes):
+    def handleOutp(self, modes: List[ParameterMode]):
         params = (self.parameters(modes, 1))
         self.giveOutput(params[0])
         self.moveinstructionpointer(2)
 
-    def handleSum(self, modes):
+    def handleSum(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         self.writetomemory(self.program[self.instructionpointer + 3], params[0] + params[1], modes[-3])
         self.moveinstructionpointer(4)
 
-    def handleJumpTrue(self, modes):
+    def handleJumpTrue(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         if params[0] != 0:
             self.setinstructionpointer(params[1])
         else:
             self.moveinstructionpointer(3)
 
-    def handleJumpFalse(self, modes):
+    def handleJumpFalse(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         if params[0] == 0:
             self.setinstructionpointer(params[1])
         else:
             self.moveinstructionpointer(3)
 
-    def lessThan(self, modes):
+    def lessThan(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         if params[0] < params[1]:
             self.writetomemory(self.program[self.instructionpointer + 3], 1, modes[-3])
@@ -100,7 +110,7 @@ class opcodesolver:
             self.writetomemory(self.program[self.instructionpointer + 3], 0, modes[-3])
         self.moveinstructionpointer(4)
 
-    def equal(self, modes):
+    def equal(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 2)
         if params[0] == params[1]:
             self.writetomemory(self.program[self.instructionpointer + 3], 1, modes[-3])
@@ -108,7 +118,7 @@ class opcodesolver:
             self.writetomemory(self.program[self.instructionpointer + 3], 0, modes[-3])
         self.moveinstructionpointer(4)
 
-    def parameters(self, modes, amount):
+    def parameters(self, modes: List[ParameterMode], amount: int) -> List[int]:
         parameterlist = []
         for i in range(1, amount + 1):
             if modes[-i] == ParameterMode.POSITION:
@@ -117,31 +127,34 @@ class opcodesolver:
                 else:
                     parameterlist.append(self.program[self.program[self.instructionpointer + i]])
             elif modes[-i] == ParameterMode.IMMEDIATE:
-                    parameterlist.append(self.program[self.instructionpointer + i])
+                parameterlist.append(self.program[self.instructionpointer + i])
             elif modes[-i] == ParameterMode.RELATIVE:
-                parameterlist.append(self.program[self.relativebase + self.program[self.instructionpointer + i]])
+                if len(self.program) < self.relativebase + self.program[self.instructionpointer + i]:
+                    parameterlist.append(0)
+                else:
+                    parameterlist.append(self.program[self.relativebase + self.program[self.instructionpointer + i]])
         return parameterlist
 
-    def moveinstructionpointer(self, amount):
+    def moveinstructionpointer(self, amount: int):
         self.instructionpointer += amount
 
-    def giveOutput(self, param):
-        self.outputdevice.receiveInput(param)
+    def giveOutput(self, param: int):
+        self.outputdevice.receiveinput(param)
 
-    def receiveInput(self, param):
+    def receiveinput(self, param: int):
         self.inputs.append(param)
-        if (self.state == State.WAITING):
+        if self.state == State.WAITING:
             self.state = State.RUNNING
 
-    def setinstructionpointer(self, param):
+    def setinstructionpointer(self, param: int):
         self.instructionpointer = param
 
-    def adjustrelbase(self, modes):
+    def adjustrelbase(self, modes: List[ParameterMode]):
         params = self.parameters(modes, 1)
         self.relativebase += params[0]
         self.moveinstructionpointer(2)
 
-    def writetomemory(self, position, value, mode):
+    def writetomemory(self, position: int, value: int, mode: ParameterMode):
         if mode == ParameterMode.RELATIVE:
             position = position + self.relativebase
         if len(self.program) <= position:
@@ -149,9 +162,11 @@ class opcodesolver:
             self.program = self.program + ([0] * n)
         self.program[position] = value
 
-class Outputprinter():
-    def receiveInput(self, param):
+
+class Outputprinter(OutputDevice):
+    def receiveinput(self, param: int):
         print("received input:" + str(param))
+
 
 with open("input.txt") as file:
     program = [int(entry) for entry in file.readline().split(",")]
@@ -159,7 +174,7 @@ with open("input.txt") as file:
 programs = []
 outputs = []
 
-programrunner = opcodesolver(program, 1)
+programrunner = OpcodeSolver(program, 2)
 programrunner.outputdevice = Outputprinter()
 while programrunner.state != State.FINISHED:
     programrunner.readprogram()
