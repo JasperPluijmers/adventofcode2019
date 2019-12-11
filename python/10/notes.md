@@ -1,0 +1,1 @@
+* First part was quite simple, second part a bit harder as you actually needed to know with which asteroids you were dealing. Really hacky solution, sorry if you have to read it

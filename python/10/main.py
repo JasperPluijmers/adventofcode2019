@@ -73,6 +73,7 @@ angleoptions.sort()
 print(angleoptions)
 angleoptions = cycle(angleoptions)
 shot = 0
+
 while shot < 200:
     currentangle = next(angleoptions)
     print(currentangle)
