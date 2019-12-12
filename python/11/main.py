@@ -4,6 +4,7 @@ from typing import List, Dict
 from abc import abstractmethod, ABC
 import matplotlib.pyplot as plt
 
+
 class State(Enum):
     RUNNING = 0
     WAITING = 1
