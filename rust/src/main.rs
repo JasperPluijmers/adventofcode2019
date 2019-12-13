@@ -1,9 +1,8 @@
+use crate::day01::calculatetotalmass;
+
+mod day01;
 
 fn main() {
-    another_function("gekkeman");
+    calculatetotalmass();
 }
 
-fn another_function(name: &str) -> i32 {
-    println!("hoi {}", name);
-    5
-}
