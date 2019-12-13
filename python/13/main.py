@@ -3,7 +3,6 @@ from enum import Enum
 from typing import List, Dict
 from abc import abstractmethod, ABC
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import time
 
@@ -200,7 +199,7 @@ class InputRenderer(InputDevice):
         self.outputdevice = outputdevice
 
     def notify(self):
-        render()
+        updategameboard()
         output = None
         while not output in [-1,0,1]:
             try:
@@ -215,7 +214,9 @@ class Inputai(InputDevice):
         self.outputdevice = outputdevice
 
     def notify(self):
-        boardstate = render()
+        time.sleep(0.05)
+        updategameboard()
+        draw()
         self.outputdevice.receiveinput(calculateposition())
 
 
@@ -225,11 +226,10 @@ def calculateposition():
     return np.sign(xpositionball - xpositionself)
 
 currentscore = 0
-def render():
+def updategameboard():
     global currentscore
     collectedoutput = collector.getandclearoutput()
     boardlength = int(len(collectedoutput) / 3)
-    print(boardlength)
     newscore = 0
     for i in range(boardlength):
         values = collectedoutput[i * 3: (i * 3) + 3]
@@ -266,6 +266,29 @@ class GameTile:
     def __hash__(self):
         return self.x.__hash__() + self.y.__hash__()
 
+def draw():
+    printstate = []
+    for i in range(43):
+        printstate.append([" "] * 43)
+    for i in gameboard:
+        printstate[i.y][i.x] = maptosymbol(i.block)
+    print(chr(27) + "[2J")
+    print("Score: " + str(currentscore))
+    for line in printstate:
+        print("".join(line))
+
+def maptosymbol(tile):
+    if tile == tileType.EMPTY:
+        return " "
+    if tile == tileType.WALL:
+        return "#"
+    if tile == tileType.BLOCK:
+        return "x"
+    if tile == tileType.HORPADDLE:
+        return "_"
+    if tile == tileType.BALL:
+        return "O"
+
 with open("input.txt") as file:
     program = [int(value) for value in file.readline().split(",")]
 
@@ -275,14 +298,13 @@ renderer = Inputai(solver)
 collector = OutputCollector()
 solver.inputdevice = renderer
 solver.outputdevice = collector
-
+print([" "] * 43)
 while solver.state != State.FINISHED:
     solver.readprogram()
+print(len(gameboard))
 print(len([value for value in collector.output[2::3] if value == 2]))
-render()
+updategameboard()
 print(currentscore)
-sns.scatterplot([tile.x for tile in gameboard], [tile.y for tile in gameboard],
-                 hue=[tile.block.value for tile in gameboard])
-plt.show()
+
 
 # 14182 wrong

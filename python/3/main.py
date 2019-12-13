@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -45,3 +47,8 @@ print(min(distancepoints[1:]))
 
 wirelength = [points[0].index(intersection) + points[1].index(intersection) for intersection in intersect]
 print(min(wirelength[1:]) + 2)
+
+for pointsets in points:
+    plt.plot([point.x for point in pointsets], [point.y for point in pointsets])
+
+plt.show()
