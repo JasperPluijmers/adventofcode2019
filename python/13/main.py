@@ -191,8 +191,8 @@ class OutputCollector(OutputDevice):
         self.output.append(param)
     def getandclearoutput(self):
         outputcopy = self.output.copy()
-        output = []
-        return self.output
+        self.output = []
+        return outputcopy
 
 class InputRenderer(InputDevice):
     outputdevice: OutputDevice = None
@@ -216,12 +216,12 @@ class Inputai(InputDevice):
 
     def notify(self):
         boardstate = render()
-        self.outputdevice.receiveinput(calculateposition(boardstate))
+        self.outputdevice.receiveinput(calculateposition())
 
 
-def calculateposition(boardstate):
-    xpositionself = [tile.x for tile in boardstate if tile.block == tileType.HORPADDLE][-1]
-    xpositionball = [tile.x for tile in boardstate if tile.block == tileType.BALL][-1]
+def calculateposition():
+    xpositionself = [tile.x for tile in gameboard if tile.block == tileType.HORPADDLE][-1]
+    xpositionball = [tile.x for tile in gameboard if tile.block == tileType.BALL][-1]
     return np.sign(xpositionball - xpositionself)
 
 currentscore = 0
@@ -229,6 +229,8 @@ def render():
     global currentscore
     collectedoutput = collector.getandclearoutput()
     boardlength = int(len(collectedoutput) / 3)
+    print(boardlength)
+    newscore = 0
     for i in range(boardlength):
         values = collectedoutput[i * 3: (i * 3) + 3]
         if (values[0] == -1) & (values[1] == 0):
@@ -240,9 +242,8 @@ def render():
     # sns.scatterplot([tile.x for tile in gameboard], [tile.y for tile in gameboard],
     #                  hue=[tile.block.value for tile in gameboard])
     # plt.show()
-    if newscore != currentscore:
+    if newscore > currentscore:
         currentscore = newscore
-    return gameboard
 
 class tileType(Enum):
     EMPTY = 0
